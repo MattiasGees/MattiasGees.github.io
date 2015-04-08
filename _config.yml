@@ -11,7 +11,7 @@ facebook_username:  mattias.gees
 linkedin_username: mattiasgees
 
 # Build settings
-markdown: kramdown
+markdown: redcarpet
 highlighter: pygments
 permalink: pretty
 paginate: 5
