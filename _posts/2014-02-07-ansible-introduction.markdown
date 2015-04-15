@@ -7,4 +7,4 @@ author:     "Mattias Gees"
 header-img: "img/standard.jpg "
 ---
 
-This week I gave a presentation at [cfgmgtmcamp](http://cfgmgmtcamp.eu/) in Ghent about Ansible. You can find my presentation at the following [location](http://blog.mattiasgees.be/ansible_introduction/).
+This week I gave a presentation at [cfgmgtmcamp](http://cfgmgmtcamp.eu/) in Ghent about Ansible. You can find my presentation at the following [location](http://blog.mattiasgees.be/presentations/ansible_introduction/).
