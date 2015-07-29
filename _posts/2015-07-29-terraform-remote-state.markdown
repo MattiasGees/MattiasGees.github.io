@@ -36,6 +36,8 @@ export AWS_DEFAULT_REGION=eu-west-1
 
 Now configure the remote state. This command will automatically detect if there is a current state file on your local disk. If there is one available on your local disk, it will upload that state file to S3. When there is a file on S3, it will download that file to your local disk. S3 state files are saved in the `.terraform` folder.
 
+The `key` value is how you want to name your state file in the AWS S3 bucket. You can choose this freely, as long as the key is unique for every Terraform project.
+
 ```bash
 terraform remote config -backend=s3 -backend-config="bucket=mybucketname" -backend-config="key=nam_of_key_file"
 ```
