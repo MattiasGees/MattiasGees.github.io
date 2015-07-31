@@ -50,7 +50,7 @@ Define some outputs of values you want to use in other projects.
 
 ````
 output "vpc_id" {
-  value = "${aws_vpc.main.id}""
+  value = "${aws_vpc.main.id}"
 }
 
 output "proxy_subnets" {
