@@ -9,7 +9,7 @@ header-img: "img/standard.jpg "
 
 Last week there was a lot of fuss about the [s3 outage](https://aws.amazon.com/message/41926/) on Amazon AWS. Immediately people started tweeting that you could better host your infrastructure in your own data center where you are in  control.
 
-<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">I&#39;m not gloating over S3, I just find it interesting that so many would dump so many of their eggs in one basket.</p>&mdash; DesuExMachina🌱 (@da_667) <a href="https://twitter.com/da_667/status/836736111737208834">March 1, 2017</a></blockquote> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Today&#39;s <a href="https://twitter.com/amazon">@Amazon</a> S3 server outage caused many internet sites. Another reason why many customers continue to choose on premise over <a href="https://twitter.com/hashtag/cloud?src=hash">#cloud</a></p>&mdash; Act Today (@acttodayOZ) <a href="https://twitter.com/acttodayOZ/status/836719296231329792">February 28, 2017</a></blockquote> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 I don’t want to start a discussion on public vs private cloud but rather about single region vs multi region or single vs multiple data center when you maintain your own infrastructure. When does it make sense for a company to think about multiple regions?
 
