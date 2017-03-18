@@ -11,8 +11,8 @@ facebook_username:  mattias.gees
 linkedin_username: mattiasgees
 
 # Build settings
-markdown: redcarpet
-highlighter: pygments
+markdown: kramdown
+highlighter: rouge
 permalink: pretty
 paginate: 5
 exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
