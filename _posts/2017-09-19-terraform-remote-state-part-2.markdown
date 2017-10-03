@@ -9,7 +9,7 @@ header-img: "img/standard.jpg "
 
 # Terraform remote state part 2
 
-Two years ago I wrote about using Terraform remote state. Since then a lot has changed in Terraform and it was about time to write an update on Terraform remote state and its current usage.
+Two years ago I [wrote](http://blog.mattiasgees.be/2015/07/29/terraform-remote-state/) about using Terraform remote state. Since then a lot has changed in Terraform and it was about time to write an update on Terraform remote state and its current usage.
 
 ## Introduction
 
