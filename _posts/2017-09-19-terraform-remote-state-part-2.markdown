@@ -91,7 +91,7 @@ module "app" {
 
 ## Terraform workspaces
 
-Since terraform 0.0.9 we have terraform environments, now called terraform workspaces. These workspaces  make it possible to easily deploy the same infrastructure to multiple environments (eg. production and staging). You don't need to hack around with reconfiguration of remote config or maintaining multiple code paths. With just one command you can switch between workspaces.
+Since terraform [0.9.0](https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#090-march-15-2017) we have terraform environments, now called terraform workspaces. These workspaces  make it possible to easily deploy the same infrastructure to multiple environments (eg. production and staging). You don't need to hack around with reconfiguration of remote config or maintaining multiple code paths. With just one command you can switch between workspaces.
 
 I will not go into detailsabout Terraform workspaces, but I suggest you read the [official documentation](https://www.terraform.io/docs/state/workspaces.html). A more detailed blogpost about Terraform Workspaces will follow.
 
