@@ -15,4 +15,4 @@ markdown: kramdown
 highlighter: rouge
 permalink: pretty
 paginate: 5
-exclude: ["less","node_modules","Gruntfile.js","package.json","README.md", "presentations"]
+exclude: ["less","node_modules","Gruntfile.js","package.json","README.md", "presentations/*/README.md", "presentations/*/css/theme/README.md"]
