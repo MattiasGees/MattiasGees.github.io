@@ -55,7 +55,7 @@ output "vpc_id" {
 }
 
 output "proxy_subnets" {
- value = "${aws_subnet.proxy_subnets.*}" !!! CHANGE THIS
+ value = ["${aws_subnet.proxy_subnets.*.id}"]
 }
 ```
 
