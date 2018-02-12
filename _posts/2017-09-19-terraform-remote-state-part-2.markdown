@@ -101,8 +101,8 @@ There is only one mandatory change you have to make when you are using remote st
 
 ```
 data "terraform_remote_state" "static" {
- backend     = "s3"
- environment = "${terraform.workspace}"
+ backend   = "s3"
+ workspace = "${terraform.workspace}"
 
  config {
    bucket = "terraform-state-example-default"
