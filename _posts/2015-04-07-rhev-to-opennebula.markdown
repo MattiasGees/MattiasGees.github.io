@@ -4,10 +4,10 @@ title:      "RHEV VM to OpenNebula VM"
 subtitle:   "Setting up a new virtualization environment."
 date:       2015-04-07 19:15:00
 author:     "Mattias Gees"
-header-img: "img/standard.jpg "
+background: "/img/standard.jpg "
 ---
 
-#Intro
+# Intro
 
 For my last job I was responsible for setting up a new virtualization environment. The original virtualization platform was RHEV and I replaced it with OpenNebula. The advantage of OpenNebula is that it is giving us a lot more flexibility and it is easy to provision new Virtual Machines from a template. Also, this is a service we could give to the developers inside the company to set up their own virtual machines.
 
@@ -15,9 +15,9 @@ I built a whole new environment while the old RHEV environment was still running
 
 On the RHEV we had a couple of Windows machines I couldn't rebuild so I needed to migrate these to the OpenNebula environment. This was really easy as both systems are using KVM as virtualization layer. The biggest difference was that RHEV was using ISCSI and LVM as storage and our OpenNebula installation is NFS and file based.
 
-#Howto
+# Howto
 
-##RHEV Manager Shell
+## RHEV Manager Shell
 
 On the RHEV machine you need to look-up some details about the virtual hard drives before you can copy them.  
 The first step is to make a connection to the RHEV Manager Shell.
@@ -67,7 +67,7 @@ storage_domains-storage_domain-id: 7f4acfe5-6eb7-402a-8b06-a157f8f50c0a
 wipe_after_delete                : False
 ```
 
-##Find the LVS
+## Find the LVS
 
 With the information you received from the RHEV Manager Shell you can find the LVS information of that disk by running the following command on the Storage Pool Manager (SPM) node.  
 The path exists of /dev/&lt;storage_domains+storage_domain-id&gt;/&lt;image_id&gt;
@@ -92,7 +92,7 @@ Read ahead sectors     auto
 Block device           253:26
 ```
 
-##Make the LV available
+## Make the LV available
 
 Before you can start copying the LV, you need to make the LV available for use by running lvchange with the parameters -ay (activate + yes).
 
@@ -100,7 +100,7 @@ Before you can start copying the LV, you need to make the LV available for use b
 $ lvchange -ay /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
 ```
 
-##Copy the image
+## Copy the image
 
 On the receiving server (OpenNebula management node) run the following command. This command will save the data it receives on port 19000 to test1.img.
 
@@ -114,7 +114,7 @@ On the sending server (SPM server) execute the following command.
 $  dd bs=1M if=/dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f|bzip2 -c|nc <hostname.of.server> 19000
 ```
 
-##Import into OpenNebula
+## Import into OpenNebula
 
 Change to user oneadmin on the OpenNebula management node and run the following command.
 

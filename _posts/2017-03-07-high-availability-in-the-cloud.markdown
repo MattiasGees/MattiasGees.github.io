@@ -4,7 +4,7 @@ title:      "High Availability in the cloud"
 subtitle:   "High Availability in the cloud"
 date:       2017-03-07 16:30:00
 author:     "Mattias Gees"
-header-img: "img/standard.jpg "
+background: "/img/standard.jpg "
 ---
 
 Last week there was a lot of fuss about the [s3 outage](https://aws.amazon.com/message/41926/) on Amazon AWS. Immediately people started tweeting that you could better host your infrastructure in your own data center where you are in  control.

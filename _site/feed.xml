@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>blog.mattiasgees.be</title>
+    <description>My personal blog.</description>
+    <link>http://0.0.0.0:4000/</link>
+    <atom:link href="http://0.0.0.0:4000/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Sat, 15 Oct 2022 15:43:12 -0500</pubDate>
+    <lastBuildDate>Sat, 15 Oct 2022 15:43:12 -0500</lastBuildDate>
+    <generator>Jekyll v4.2.2</generator>
+    
+      <item>
+        <title>Time for a new adventure</title>
+        <description>&lt;h1 id=&quot;time-for-a-new-adventure&quot;&gt;Time for a new adventure&lt;/h1&gt;
+
+&lt;p&gt;This week is my last week at &lt;a href=&quot;http://skyscrapers.eu&quot;&gt;Skyscrapers&lt;/a&gt;. After more than three and a half remarkable years it is time to say goodbye to my great Skyscrapers colleagues. Being only 3 back in 2014, currently employing 9, I saw the company grow and change (a lot). Of those 9 people 4 people are even living outside of Belgium, which makes Skyscrapers a true remote working company.&lt;/p&gt;
+
+&lt;p&gt;I am looking back at my time at Skyscrapers with nothing but good memories. Thanks to &lt;a href=&quot;https://twitter.com/fdenkens&quot;&gt;Frederik&lt;/a&gt; I got to know the Belgian hosting market and rolled into the startup scene. I was always encouraged to try new stuff and develop my qualities by testing new technologies (as long as they were also useful to us or our customers :) ). It is also thanks to that mentality I got in touch early with Docker and Kubernetes. I wish Skyscrapers all the best. I am sure we will see eachother again at open-source and social events.&lt;/p&gt;
+
+&lt;p&gt;I will join London based &lt;a href=&quot;https://www.jetstack.io&quot;&gt;Jetstack&lt;/a&gt; as a solution engineer. Jetstack is a company that is completely centered around the Kubernetes eco-system. I already had the chance to meet some new colleagues and I have to say I am looking forward to our cooperation. &lt;a href=&quot;https://www.jetstack.io/about/mattbarker/#&quot;&gt;Matt&lt;/a&gt; and &lt;a href=&quot;https://www.jetstack.io/about/mattbates/&quot;&gt;Matt&lt;/a&gt; (co-founders of Jetstack) gave me a safe and welcome feeling in their company. My first days working for Jetstack will be at &lt;a href=&quot;https://events.linuxfoundation.org/events/kubecon-cloudnativecon-europe-2018/&quot;&gt;Kubecon&lt;/a&gt; in Copenhagen, where Jetstack is present with the entire team.&lt;/p&gt;
+
+&lt;p&gt;This means I will leave Belgium and relocate to London. A big change as I never permanently lived outside Belgium, but I am really excited to take this opportunity and jump in this adventure. The first couple of weeks I will need to settle down and look for my own spot, but after that you are always welcome to visit me in London. I will also regularly travel back to Belgium to visit family and I will stay active in Team-Arctic, the non-profit I am a board member of.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 24 Apr 2018 11:30:00 -0500</pubDate>
+        <link>http://0.0.0.0:4000/2018/04/24/time-for-new-adventure/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2018/04/24/time-for-new-adventure/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Terraform remote state part 2</title>
+        <description>&lt;h1 id=&quot;terraform-remote-state-part-2&quot;&gt;Terraform remote state part 2&lt;/h1&gt;
+
+&lt;p&gt;Two years ago I &lt;a href=&quot;http://blog.mattiasgees.be/2015/07/29/terraform-remote-state/&quot;&gt;wrote&lt;/a&gt; about using Terraform remote state. Since then a lot has changed in Terraform and it was about time to write an update on Terraform remote state and its current usage.&lt;/p&gt;
+
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;At Skyscrapers we use S3 to save all our remote states. We even &lt;a href=&quot;https://github.com/skyscrapers/terraform-state/&quot;&gt;setup&lt;/a&gt; our S3 bucket where we save our remote state with Terraform.&lt;/p&gt;
+
+&lt;p&gt;Our S3 buckets are configured with versioning enabled. (that way we can always roll-back if needed). Our S3 bucket has a policy to only allow encrypted uploads of the remote state. Hence  we are ensured that our remote state is securely stored in our S3 buckets. A remote state can contain passwords and other secrets.&lt;/p&gt;
+
+&lt;p&gt;Since version &lt;a href=&quot;https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#090-march-15-2017&quot;&gt;0.9.0&lt;/a&gt; Terraform has introduced state locking, which we immediately started using. This feature ensures that only one person or process can make changes to our infrastructure. As we are an AWS partner, we use Amazon DynamoDB to lock our state file.&lt;/p&gt;
+
+&lt;h2 id=&quot;configure-remote-state&quot;&gt;Configure remote state&lt;/h2&gt;
+
+&lt;p&gt;Over the last two years  how you configure your remote state has changed quite a bit. Where earlier you had to configure your remote state on every location manually with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;terraform remote config&lt;/code&gt;, you can now do the config inside your Terraform project. One less task to remember when you start working on a Terraform project!&lt;/p&gt;
+
+&lt;p&gt;Now you configure your remote state as a code block inside your Terraform project.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform {
+ required_version = &quot;&amp;gt;= 0.10.1&quot;
+
+ backend &quot;s3&quot; {
+   bucket         = &quot;terraform-state-example-default&quot;
+   key            = &quot;static/main&quot;
+   region         = &quot;eu-west-1&quot;
+   dynamodb_table = &quot;terraform-state-lock-example-default&quot;
+   encrypt        = true
+ }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This config will indicate to Terraform that it has to save your remote state to S3 in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;terraform-state-example-default&lt;/code&gt; with a key called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;static/main&lt;/code&gt;. You want to have your remote state file encrypted and you are using a state lock table called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;terraform-state-lock-example-default&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;After adding the above to your project, you need to run the newly introduced &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;terraform init&lt;/code&gt; command. This command will fetch all  the modules that you  are using in Terraform project, your remote state as well as your terraform providers since 0.10.0.&lt;/p&gt;
+
+&lt;p&gt;After doing this, your remote state is set up and you can start using it by running your normal Terraform commands. Your state will automatically be saved to S3.&lt;/p&gt;
+
+&lt;h2 id=&quot;using-remote-state-in-other-terraform-projects&quot;&gt;Using remote state in other Terraform projects&lt;/h2&gt;
+
+&lt;p&gt;The way you use remote state outputs in other Terraform projects has changed as well since &lt;a href=&quot;https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#070-august-2-2016&quot;&gt;0.7.0&lt;/a&gt;.. Outputs are defined the same, but how you get those outputs in other Terraform projects has changed.&lt;/p&gt;
+
+&lt;p&gt;First you have to define some outputs in your main Terraform projects&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;output &quot;vpc_id&quot; {
+ value = &quot;${aws_vpc.main.id}&quot;
+}
+
+output &quot;proxy_subnets&quot; {
+ value = [&quot;${aws_subnet.proxy_subnets.*.id}&quot;]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After a terraform apply/refresh you will see the following.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Outputs:
+ proxy_subnets      = subnet-1232ae34,subnet-abc41234,subnet-abc1e399
+ vpc_id             = vpc-1232ae34
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now go to the project where you want to use those outputs. We don’t need to declare a resource but rather a datasource. You can take a datasource quite literally:  you can only get data from it, but it will not make changes to anything.
+After you declare your datasource, you can use the outputs as input for modules and other elements. You can call the outputs the following way &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${data.terraform_remote_state.&amp;lt;data_name&amp;gt;.&amp;lt;output_name&amp;gt;}&lt;/code&gt;. An example is:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;data &quot;terraform_remote_state&quot; &quot;static&quot; {
+ backend     = &quot;s3&quot;
+
+ config {
+   bucket = &quot;terraform-state-example-default&quot;
+   key    = &quot;static/main&quot;
+   region = &quot;eu-west-1&quot;
+ }
+}
+
+module &quot;app&quot; {
+ source  = &quot;modules/blue-green&quot;
+ name    = &quot;app&quot;
+ vpc_id  = &quot;${data.terraform_remote_state.static.vpc_id}&quot;
+ subnets = &quot;${data.terraform_remote_state.static.app_subnets}&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;terraform-workspaces&quot;&gt;Terraform workspaces&lt;/h2&gt;
+
+&lt;p&gt;Since terraform &lt;a href=&quot;https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#090-march-15-2017&quot;&gt;0.9.0&lt;/a&gt; we have terraform environments, now called terraform workspaces. These workspaces  make it possible to easily deploy the same infrastructure to multiple environments (eg. production and staging). You don’t need to hack around with reconfiguration of remote config or maintaining multiple code paths. With just one command you can switch between workspaces.&lt;/p&gt;
+
+&lt;p&gt;I will not go into detailsabout Terraform workspaces, but I suggest you read the &lt;a href=&quot;https://www.terraform.io/docs/state/workspaces.html&quot;&gt;official documentation&lt;/a&gt;. A more detailed blogpost about Terraform Workspaces will follow.&lt;/p&gt;
+
+&lt;p&gt;Terraform workspaces can be used without any problem with remote states. Not all remote states support this feature, but S3 and Consul do.&lt;/p&gt;
+
+&lt;p&gt;There is only one mandatory change you have to make when you are using remote state and Terraform workspace, namelyin the declaration of your dataresource in the Terraform project where you want to use the output of a remote state. You will need to add key called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;workspace&lt;/code&gt;. This needs to point to the name of your workspace of your remote state. If your workspaces are the same in the Terraform project where you defined the output, you can use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;${terraform.workspace}&lt;/code&gt; variable to map it 1:1. A full example below:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;data &quot;terraform_remote_state&quot; &quot;static&quot; {
+ backend   = &quot;s3&quot;
+ workspace = &quot;${terraform.workspace}&quot;
+
+ config {
+   bucket = &quot;terraform-state-example-default&quot;
+   key    = &quot;static/main&quot;
+   region = &quot;eu-west-1&quot;
+ }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Tue, 19 Sep 2017 11:30:00 -0500</pubDate>
+        <link>http://0.0.0.0:4000/2017/09/19/terraform-remote-state-part-2/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/09/19/terraform-remote-state-part-2/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>High Availability in the cloud</title>
+        <description>&lt;p&gt;Last week there was a lot of fuss about the &lt;a href=&quot;https://aws.amazon.com/message/41926/&quot;&gt;s3 outage&lt;/a&gt; on Amazon AWS. Immediately people started tweeting that you could better host your infrastructure in your own data center where you are in  control.&lt;/p&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; data-lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Today&amp;#39;s &lt;a href=&quot;https://twitter.com/amazon&quot;&gt;@Amazon&lt;/a&gt; S3 server outage caused many internet sites. Another reason why many customers continue to choose on premise over &lt;a href=&quot;https://twitter.com/hashtag/cloud?src=hash&quot;&gt;#cloud&lt;/a&gt;&lt;/p&gt;&amp;mdash; Act Today (@acttodayOZ) &lt;a href=&quot;https://twitter.com/acttodayOZ/status/836719296231329792&quot;&gt;February 28, 2017&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async=&quot;&quot; src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;I don’t want to start a discussion on public vs private cloud but rather about single region vs multi region or single vs multiple data center when you maintain your own infrastructure. When does it make sense for a company to think about multiple regions?&lt;/p&gt;
+
+&lt;p&gt;During the outage I tweeted about the downtime and I got some response to go multi-region and multi-cloud for your application.&lt;/p&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; data-lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Every time a cloud provider fails “You should host it on-premise”. Every time something on-premise fails ”You should host it in the cloud”!&lt;/p&gt;&amp;mdash; Mattias Gees (@MattiasGees) &lt;a href=&quot;https://twitter.com/MattiasGees/status/836695430733914112&quot;&gt;February 28, 2017&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async=&quot;&quot; src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;My reply was that this needs to be a business decision rather than a technical decision. We as technical people like to build infrastructure in the best and most reliable way. This implies investing a lot of time and energy in adapting your application and infrastructure to multi region. Time that is most of the time better invested in improving your application. You better release a new feature from which your customer benefits immediately.&lt;/p&gt;
+
+&lt;p&gt;So when does it pay-off to go multi region? It depends on the following factors.
+Will you lose more money when your application is down compared  to set-up / maintain and test your multi region setup?
+You lose credibility with your customers when you go down.
+Do you have a high SLA requirement?
+Some other specific requirements?&lt;/p&gt;
+
+&lt;p&gt;To known if you match one of those criterias is really hard. I would recommend to start using multi availability zones in AWS first. If and only if there is a huge motivation, go the multi region way.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 07 Mar 2017 10:30:00 -0600</pubDate>
+        <link>http://0.0.0.0:4000/2017/03/07/high-availability-in-the-cloud/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/03/07/high-availability-in-the-cloud/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Terraform remote state</title>
+        <description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+&lt;p&gt;For an Amazon AWS project at &lt;a href=&quot;http://skyscrapers.eu&quot;&gt;work&lt;/a&gt;, we are setting up a complete Amazon AWS infrastructure with Terraform. The first step was to setup a VPC, ELBs, RDS and basic EC2 instances.&lt;/p&gt;
+
+&lt;p&gt;I started looking into the remote state capabilities of Terraform together with S3 storage, because it lets us work together without the need to check-in the Terraform state files to our source control, while still saving it at a central place.&lt;/p&gt;
+
+&lt;p&gt;Putting your Terraform state file on Aamazon S3 has an other advantage: you can use Terraform outputs into other projects. This solution came in handy when we wanted to setup &lt;a href=&quot;http://martinfowler.com/bliki/BlueGreenDeployment.html&quot;&gt;blue/green deployment&lt;/a&gt; with AWS autoscaling.&lt;/p&gt;
+
+&lt;p&gt;By dividing the static parts (ELB, RDS, VPC, …) from the dynamic parts (Autoscaling groups), we created an extra security layer. When we automate the blue/green deployment through job servers (Jenkins, TravisCI, CircleCI), we have an extra security layer, where we can’t destroy the static parts by accident when deploying a new version of the software.&lt;/p&gt;
+
+&lt;h1 id=&quot;configure-remote-state&quot;&gt;Configure remote state&lt;/h1&gt;
+
+&lt;p&gt;First make sure you have AWS API credentials defined in your AWS CLI tool or as environment variable. You need to do this as Terraform remote state does not use your Terraform variables but the system AWS credentials. If you have different AWS accounts where you deploy your infrastructure, you can still put every state file in the same S3 bucket.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Configure with AWS CLI&lt;/span&gt;
+AWS Access Key ID &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;None]: AKIAIOSFODNN7EXAMPLE
+AWS Secret Access Key &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+Default region name &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;None]: eu-west-1
+Default output format &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;None]: json
+
+&lt;span class=&quot;c&quot;&gt;# Export as environment variable&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AWS_ACCESS_KEY_ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;AKIAIOSFODNN7EXAMPLE
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AWS_SECRET_ACCESS_KEY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;AWS_DEFAULT_REGION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;eu-west-1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now configure the remote state. This command will automatically detect if there is a current state file on your local disk. If there is one available on your local disk, it will upload that state file to S3. When there is a file on S3, it will download that file to your local disk. S3 state files are saved in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.terraform&lt;/code&gt; folder.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;key&lt;/code&gt; value is how you want to name your state file in the AWS S3 bucket. You can choose this freely, as long as the key is unique for every Terraform project.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform remote config &lt;span class=&quot;nt&quot;&gt;-backend&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;s3 &lt;span class=&quot;nt&quot;&gt;-backend-config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;bucket=mybucketname&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-backend-config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;key=nam_of_key_file&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;using-remote-state-in-other-terraform-projects&quot;&gt;Using remote state in other Terraform projects&lt;/h1&gt;
+
+&lt;p&gt;You can use a state file and its &lt;a href=&quot;https://terraform.io/docs/configuration/outputs.html&quot;&gt;outputs&lt;/a&gt; with other projects.&lt;/p&gt;
+
+&lt;p&gt;Define some outputs of values you want to use in other projects.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-`&quot;&gt;output &quot;vpc_id&quot; {
+  value = &quot;${aws_vpc.main.id}&quot;
+}
+
+output &quot;proxy_subnets&quot; {
+  value = &quot;${join(&quot;,&quot;, aws_subnet.proxy_subnets.*.id)}&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After a terraform apply run you will see the following.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Outputs:
+  proxy_subnets      = subnet-1232ae34,subnet-abc41234,subnet-abc1e399
+  vpc_id             = vpc-1232ae34
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In a new terraform project you can do the following, to use these two outputs.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;provider &quot;aws&quot; {
+  access_key  = &quot;${var.access_key}&quot;
+  secret_key  = &quot;${var.secret_key}&quot;
+  region = &quot;${var.aws_region}&quot;
+}
+
+resource &quot;terraform_remote_state&quot; &quot;remote_state&quot; {
+    backend = &quot;s3&quot;
+    config {
+        bucket = &quot;mybucketname&quot;
+        key = &quot;nam_of_key_file&quot;
+    }
+}
+
+module &quot;app&quot; {
+  source = &quot;modules/blue-green&quot;
+  name = &quot;app&quot;
+  vpc_id = &quot;${terraform_remote_state.remote_state.output.vpc_id}&quot;
+  subnets = &quot;${terraform_remote_state.remote_state.output.app_subnets}&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;em&gt;Little side note: To use outputs of modules in other Terraform projects you will also need to define those outputs in your main terraform file. For example:&lt;/em&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;output &quot;vpc_id&quot; {
+  value = &quot;${module.vpc.vpc_id}&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;It is true what Hashicorp &lt;a href=&quot;https://terraform.io/docs/state/remote.html&quot;&gt;says&lt;/a&gt;: Putting your state somewhere remote (S3, Atlas,Consul) improves safety and teamwork and I see a lot of advantages for the Terraform remote state. I hope that sometime in the near future we can configure the remote state through config file instead of command line, see the &lt;a href=&quot;https://github.com/hashicorp/terraform/issues/1964&quot;&gt;following GitHub issue.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;My current blue/green Terraform deployment is mostly based on &lt;a href=&quot;https://twitter.com/phinze&quot;&gt;@phinze&lt;/a&gt; &lt;a href=&quot;https://github.com/phinze/tf-bluegreen-asg-deployment&quot;&gt;example&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 29 Jul 2015 11:30:00 -0500</pubDate>
+        <link>http://0.0.0.0:4000/2015/07/29/terraform-remote-state/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2015/07/29/terraform-remote-state/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>RHEV VM to OpenNebula VM</title>
+        <description>&lt;h1 id=&quot;intro&quot;&gt;Intro&lt;/h1&gt;
+
+&lt;p&gt;For my last job I was responsible for setting up a new virtualization environment. The original virtualization platform was RHEV and I replaced it with OpenNebula. The advantage of OpenNebula is that it is giving us a lot more flexibility and it is easy to provision new Virtual Machines from a template. Also, this is a service we could give to the developers inside the company to set up their own virtual machines.&lt;/p&gt;
+
+&lt;p&gt;I built a whole new environment while the old RHEV environment was still running.&lt;/p&gt;
+
+&lt;p&gt;On the RHEV we had a couple of Windows machines I couldn’t rebuild so I needed to migrate these to the OpenNebula environment. This was really easy as both systems are using KVM as virtualization layer. The biggest difference was that RHEV was using ISCSI and LVM as storage and our OpenNebula installation is NFS and file based.&lt;/p&gt;
+
+&lt;h1 id=&quot;howto&quot;&gt;Howto&lt;/h1&gt;
+
+&lt;h2 id=&quot;rhev-manager-shell&quot;&gt;RHEV Manager Shell&lt;/h2&gt;
+
+&lt;p&gt;On the RHEV machine you need to look-up some details about the virtual hard drives before you can copy them.&lt;br /&gt;
+The first step is to make a connection to the RHEV Manager Shell.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@rhevmanager ~]# rhevm-shell
+
+ ++++++++++++++++++++++++++++++++++++++++++
+
+           Welcome to RHEVM shell
+
+ ++++++++++++++++++++++++++++++++++++++++++
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;RHEVM shell &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;disconnected&lt;span class=&quot;o&quot;&gt;)]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# connect --url &quot;https://localhost:8443/api&quot; --user &quot;username&quot; --password &quot;password&quot; --insecure&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When connected to the RHEV Manager shell, look-up the connected disks to the virtual machine you want to copy.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;RHEVM shell &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;connected&lt;span class=&quot;o&quot;&gt;)]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# list disks --vm-identifier test-migrate&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;         : dff21089-e06f-46db-b5ac-fd0aef7395ba
+name       : CentOS64_Disk1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When you have the ids of the connected disks you can also look-up the details of that disk.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;RHEVM shell &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;connected&lt;span class=&quot;o&quot;&gt;)]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#  show disk --id dff21089-e06f-46db-b5ac-fd0aef7395ba&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;                               : dff21089-e06f-46db-b5ac-fd0aef7395ba
+name                             : CentOS64_Disk1
+actual_size                      : 10737418240
+&lt;span class=&quot;nb&quot;&gt;alias&lt;/span&gt;                            : CentOS64_Disk1
+bootable                         : True
+format                           : raw
+image_id                         : 4a40e716-ea25-46e4-8f98-b7989fadb04f
+interface                        : virtio
+propagate_errors                 : False
+provisioned_size                 : 10737418240
+quota-id                         : 00000000-0000-0000-0000-000000000000
+shareable                        : False
+size                             : 10737418240
+sparse                           : False
+status-state                     : ok
+storage_domains-storage_domain-id: 7f4acfe5-6eb7-402a-8b06-a157f8f50c0a
+wipe_after_delete                : False
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;find-the-lvs&quot;&gt;Find the LVS&lt;/h2&gt;
+
+&lt;p&gt;With the information you received from the RHEV Manager Shell you can find the LVS information of that disk by running the following command on the Storage Pool Manager (SPM) node.&lt;br /&gt;
+The path exists of /dev/&amp;lt;storage_domains+storage_domain-id&amp;gt;/&amp;lt;image_id&amp;gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;lvdisplay /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
+&lt;span class=&quot;nt&quot;&gt;---&lt;/span&gt; Logical volume &lt;span class=&quot;nt&quot;&gt;---&lt;/span&gt;
+LV Path                /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
+LV Name                4a40e716-ea25-46e4-8f98-b7989fadb04f
+VG Name                7f4acfe5-6eb7-402a-8b06-a157f8f50c0a
+LV UUID                17DXHn-JLxK-hbG2-Cm93-yLGW-Pw33-9Ir95Z
+LV Write Access        &lt;span class=&quot;nb&quot;&gt;read&lt;/span&gt;/write
+LV Creation host, &lt;span class=&quot;nb&quot;&gt;time &lt;/span&gt;node.example.local, 2014-06-10 15:06:25 +0200
+LV Status              available
+&lt;span class=&quot;c&quot;&gt;# open                 0&lt;/span&gt;
+LV Size                10.00 GiB
+Current LE             80
+Segments               2
+Allocation             inherit
+Read ahead sectors     auto
+- currently &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;to     256
+Block device           253:26
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;make-the-lv-available&quot;&gt;Make the LV available&lt;/h2&gt;
+
+&lt;p&gt;Before you can start copying the LV, you need to make the LV available for use by running lvchange with the parameters -ay (activate + yes).&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;lvchange &lt;span class=&quot;nt&quot;&gt;-ay&lt;/span&gt; /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;copy-the-image&quot;&gt;Copy the image&lt;/h2&gt;
+
+&lt;p&gt;On the receiving server (OpenNebula management node) run the following command. This command will save the data it receives on port 19000 to test1.img.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt; nc &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; 19000|bzip2 &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt;|dd &lt;span class=&quot;nv&quot;&gt;bs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1M &lt;span class=&quot;nv&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/test1.img
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;On the sending server (SPM server) execute the following command.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;dd &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;bs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1M &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f|bzip2 &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt;|nc &amp;lt;hostname.of.server&amp;gt; 19000
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;import-into-opennebula&quot;&gt;Import into OpenNebula&lt;/h2&gt;
+
+&lt;p&gt;Change to user oneadmin on the OpenNebula management node and run the following command.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt; oneimage create &lt;span class=&quot;nt&quot;&gt;--datastore&lt;/span&gt; datastore_name &lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt; test1 &lt;span class=&quot;nt&quot;&gt;--path&lt;/span&gt; /test1.img &lt;span class=&quot;nt&quot;&gt;--description&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Imported test image&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It is also possible to use the Opennebula GUI and import the copied image that way.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/opennebula_import.png&quot; alt=&quot;OpenNebula import&quot; title=&quot;OpenNebula import&quot; /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 07 Apr 2015 14:15:00 -0500</pubDate>
+        <link>http://0.0.0.0:4000/2015/04/07/rhev-to-opennebula/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2015/04/07/rhev-to-opennebula/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Introduction to Ansible</title>
+        <description>&lt;p&gt;This week I gave a presentation at &lt;a href=&quot;http://cfgmgmtcamp.eu/&quot;&gt;cfgmgtmcamp&lt;/a&gt; in Ghent about Ansible. You can find my presentation at the following &lt;a href=&quot;http://blog.mattiasgees.be/presentations/ansible_introduction/&quot;&gt;location&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 07 Feb 2014 13:15:00 -0600</pubDate>
+        <link>http://0.0.0.0:4000/2014/02/07/ansible-introduction/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2014/02/07/ansible-introduction/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Pelican with AsciiDoc</title>
+        <description>&lt;p&gt;I decided to setup my own blog with Pelican and AsciiDoc. Pelican works with readers to convert your markup language to html. Standard support is provided for reStructuredText, Markdown and AsciiDoc. The problem is that AsciiDoc doesn’t generate out of the box. This is because you need a Python library for AsciiDoc called &lt;a href=&quot;http://www.methods.co.nz/asciidoc/asciidocapi.html&quot;&gt;AsciiDocAPI&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The library is distributed with the &lt;a href=&quot;http://sourceforge.net/projects/asciidoc/&quot;&gt;original AsciiDoc source&lt;/a&gt;. You need to place the asciidocapi.py in the pelican root folder. In my case this was /Library/Python/2.7/site-packages/pelican.&lt;/p&gt;
+
+&lt;p&gt;After moving the document in the root folder, my AsciiDoc documents were generating to HTML. A second problem rised: the HTML files that were generated contained the word None (eg pelican-blog-None.html). After some research I found a &lt;a href=&quot;http://sourceforge.net/projects/asciidoc/&quot;&gt;pull request&lt;/a&gt; with a solution. I needed to add the following line to my pelican config.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;ASCIIDOC_OPTIONS&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;-a lang=en&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you want code highlighting then you need to pass an extra argument to the ASCIIDOC_OPTIONS variable.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;ASCIIDOC_OPTIONS&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;-a source-highlighter=pygments&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;-a lang=en&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Afterwards, my blog was generating nicely with code highlighting and I was ready to post my first blog post.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;UPDATE:&lt;/strong&gt; I moved to Jekyll and Markdown now, but this code still works.&lt;/p&gt;
+</description>
+        <pubDate>Sun, 26 Jan 2014 06:00:00 -0600</pubDate>
+        <link>http://0.0.0.0:4000/2014/01/26/set-up-pelican/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2014/01/26/set-up-pelican/</guid>
+        
+        
+      </item>
+    
+  </channel>
+</rss>

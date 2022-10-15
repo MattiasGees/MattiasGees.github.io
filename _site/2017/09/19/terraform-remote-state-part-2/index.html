@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>
+    Terraform remote state part 2 - blog.mattiasgees.be
+    
+  </title>
+
+  <meta name="description" content="Terraform remote state part 2">
+
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+  <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+  <link rel="canonical" href="http://0.0.0.0:4000/2017/09/19/terraform-remote-state-part-2/">
+  <link rel="alternate" type="application/rss+xml" title="blog.mattiasgees.be" href="/feed.xml">
+
+</head>
+
+
+<body>
+
+  <!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="/">blog.mattiasgees.be</a>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      Menu
+      <i class="fa fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/about">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/posts">Posts</a>
+        </li>
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="/contact">Contact</a>
+        </li> -->
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+  <!-- Page Header -->
+
+<header class="masthead" style="background-image: url('/img/standard.jpg ')">
+  
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="post-heading">
+            <h1>Terraform remote state part 2</h1>
+            
+            <h2 class="subheading">Terraform remote state part 2.</h2>
+            
+            <span class="meta">Posted by
+              <a href="#">Mattias Gees</a>
+              on September 19, 2017 &middot; <span class="reading-time" title="Estimated read time">
+  
+   6 mins  read </span>
+
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+
+        <h1 id="terraform-remote-state-part-2">Terraform remote state part 2</h1>
+
+<p>Two years ago I <a href="http://blog.mattiasgees.be/2015/07/29/terraform-remote-state/">wrote</a> about using Terraform remote state. Since then a lot has changed in Terraform and it was about time to write an update on Terraform remote state and its current usage.</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>At Skyscrapers we use S3 to save all our remote states. We even <a href="https://github.com/skyscrapers/terraform-state/">setup</a> our S3 bucket where we save our remote state with Terraform.</p>
+
+<p>Our S3 buckets are configured with versioning enabled. (that way we can always roll-back if needed). Our S3 bucket has a policy to only allow encrypted uploads of the remote state. Hence  we are ensured that our remote state is securely stored in our S3 buckets. A remote state can contain passwords and other secrets.</p>
+
+<p>Since version <a href="https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#090-march-15-2017">0.9.0</a> Terraform has introduced state locking, which we immediately started using. This feature ensures that only one person or process can make changes to our infrastructure. As we are an AWS partner, we use Amazon DynamoDB to lock our state file.</p>
+
+<h2 id="configure-remote-state">Configure remote state</h2>
+
+<p>Over the last two years  how you configure your remote state has changed quite a bit. Where earlier you had to configure your remote state on every location manually with <code class="language-plaintext highlighter-rouge">terraform remote config</code>, you can now do the config inside your Terraform project. One less task to remember when you start working on a Terraform project!</p>
+
+<p>Now you configure your remote state as a code block inside your Terraform project.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>terraform {
+ required_version = "&gt;= 0.10.1"
+
+ backend "s3" {
+   bucket         = "terraform-state-example-default"
+   key            = "static/main"
+   region         = "eu-west-1"
+   dynamodb_table = "terraform-state-lock-example-default"
+   encrypt        = true
+ }
+}
+</code></pre></div></div>
+
+<p>This config will indicate to Terraform that it has to save your remote state to S3 in the <code class="language-plaintext highlighter-rouge">terraform-state-example-default</code> with a key called <code class="language-plaintext highlighter-rouge">static/main</code>. You want to have your remote state file encrypted and you are using a state lock table called <code class="language-plaintext highlighter-rouge">terraform-state-lock-example-default</code>.</p>
+
+<p>After adding the above to your project, you need to run the newly introduced <code class="language-plaintext highlighter-rouge">terraform init</code> command. This command will fetch all  the modules that you  are using in Terraform project, your remote state as well as your terraform providers since 0.10.0.</p>
+
+<p>After doing this, your remote state is set up and you can start using it by running your normal Terraform commands. Your state will automatically be saved to S3.</p>
+
+<h2 id="using-remote-state-in-other-terraform-projects">Using remote state in other Terraform projects</h2>
+
+<p>The way you use remote state outputs in other Terraform projects has changed as well since <a href="https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#070-august-2-2016">0.7.0</a>.. Outputs are defined the same, but how you get those outputs in other Terraform projects has changed.</p>
+
+<p>First you have to define some outputs in your main Terraform projects</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>output "vpc_id" {
+ value = "${aws_vpc.main.id}"
+}
+
+output "proxy_subnets" {
+ value = ["${aws_subnet.proxy_subnets.*.id}"]
+}
+</code></pre></div></div>
+
+<p>After a terraform apply/refresh you will see the following.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Outputs:
+ proxy_subnets      = subnet-1232ae34,subnet-abc41234,subnet-abc1e399
+ vpc_id             = vpc-1232ae34
+</code></pre></div></div>
+
+<p>Now go to the project where you want to use those outputs. We don’t need to declare a resource but rather a datasource. You can take a datasource quite literally:  you can only get data from it, but it will not make changes to anything.
+After you declare your datasource, you can use the outputs as input for modules and other elements. You can call the outputs the following way <code class="language-plaintext highlighter-rouge">${data.terraform_remote_state.&lt;data_name&gt;.&lt;output_name&gt;}</code>. An example is:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data "terraform_remote_state" "static" {
+ backend     = "s3"
+
+ config {
+   bucket = "terraform-state-example-default"
+   key    = "static/main"
+   region = "eu-west-1"
+ }
+}
+
+module "app" {
+ source  = "modules/blue-green"
+ name    = "app"
+ vpc_id  = "${data.terraform_remote_state.static.vpc_id}"
+ subnets = "${data.terraform_remote_state.static.app_subnets}"
+}
+</code></pre></div></div>
+
+<h2 id="terraform-workspaces">Terraform workspaces</h2>
+
+<p>Since terraform <a href="https://github.com/hashicorp/terraform/blob/master/CHANGELOG.md#090-march-15-2017">0.9.0</a> we have terraform environments, now called terraform workspaces. These workspaces  make it possible to easily deploy the same infrastructure to multiple environments (eg. production and staging). You don’t need to hack around with reconfiguration of remote config or maintaining multiple code paths. With just one command you can switch between workspaces.</p>
+
+<p>I will not go into detailsabout Terraform workspaces, but I suggest you read the <a href="https://www.terraform.io/docs/state/workspaces.html">official documentation</a>. A more detailed blogpost about Terraform Workspaces will follow.</p>
+
+<p>Terraform workspaces can be used without any problem with remote states. Not all remote states support this feature, but S3 and Consul do.</p>
+
+<p>There is only one mandatory change you have to make when you are using remote state and Terraform workspace, namelyin the declaration of your dataresource in the Terraform project where you want to use the output of a remote state. You will need to add key called <code class="language-plaintext highlighter-rouge">workspace</code>. This needs to point to the name of your workspace of your remote state. If your workspaces are the same in the Terraform project where you defined the output, you can use the <code class="language-plaintext highlighter-rouge">${terraform.workspace}</code> variable to map it 1:1. A full example below:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data "terraform_remote_state" "static" {
+ backend   = "s3"
+ workspace = "${terraform.workspace}"
+
+ config {
+   bucket = "terraform-state-example-default"
+   key    = "static/main"
+   region = "eu-west-1"
+ }
+}
+</code></pre></div></div>
+
+
+        <hr>
+
+        <div class="clearfix">
+
+          
+          <a class="btn btn-primary float-left" href="/2017/03/07/high-availability-in-the-cloud/" data-toggle="tooltip" data-placement="top" title="High Availability in the cloud">&larr; Previous<span class="d-none d-md-inline">
+              Post</span></a>
+          
+          
+          <a class="btn btn-primary float-right" href="/2018/04/24/time-for-new-adventure/" data-toggle="tooltip" data-placement="top" title="Time for a new adventure">Next<span class="d-none d-md-inline">
+              Post</span> &rarr;</a>
+          
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+
+<hr>
+
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <ul class="list-inline text-center">
+          
+          <li class="list-inline-item">
+            <a href="mailto:mattias.gees@gmail.com">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="far fa-envelope fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          <li class="list-inline-item">
+            <a href="https://twitter.com/MattiasGees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-twitter fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          
+          <li class="list-inline-item">
+            <a href="https://www.linkedin.com/in/mattiasgees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          <li class="list-inline-item">
+            <a href="https://github.com/MattiasGees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+        </ul>
+        <p class="copyright text-muted">Copyright &copy;  2022</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/vendor/startbootstrap-clean-blog/js/scripts.js"></script>
+
+<script src="/assets/scripts.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '');
+</script>
+
+
+
+</body>
+
+</html>

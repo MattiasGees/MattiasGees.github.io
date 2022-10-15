@@ -4,7 +4,7 @@ title:      "Terraform remote state part 2"
 subtitle:   "Terraform remote state part 2."
 date:       2017-09-19 16:30:00
 author:     "Mattias Gees"
-header-img: "img/standard.jpg "
+background: "/img/standard.jpg "
 ---
 
 # Terraform remote state part 2
@@ -111,5 +111,3 @@ data "terraform_remote_state" "static" {
  }
 }
 ```
-
-

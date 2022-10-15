@@ -4,7 +4,7 @@ title:      "Terraform remote state"
 subtitle:   "Setting up Terraform remote state."
 date:       2015-07-29 16:30:00
 author:     "Mattias Gees"
-header-img: "img/standard.jpg "
+background: "/img/standard.jpg "
 ---
 
 # Introduction

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>
+    RHEV VM to OpenNebula VM - blog.mattiasgees.be
+    
+  </title>
+
+  <meta name="description" content="Intro">
+
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+  <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+  <link rel="canonical" href="http://0.0.0.0:4000/2015/04/07/rhev-to-opennebula/">
+  <link rel="alternate" type="application/rss+xml" title="blog.mattiasgees.be" href="/feed.xml">
+
+</head>
+
+
+<body>
+
+  <!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="/">blog.mattiasgees.be</a>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      Menu
+      <i class="fa fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/about">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/posts">Posts</a>
+        </li>
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="/contact">Contact</a>
+        </li> -->
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+  <!-- Page Header -->
+
+<header class="masthead" style="background-image: url('/img/standard.jpg ')">
+  
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="post-heading">
+            <h1>RHEV VM to OpenNebula VM</h1>
+            
+            <h2 class="subheading">Setting up a new virtualization environment.</h2>
+            
+            <span class="meta">Posted by
+              <a href="#">Mattias Gees</a>
+              on April 07, 2015 &middot; <span class="reading-time" title="Estimated read time">
+  
+   4 mins  read </span>
+
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+
+        <h1 id="intro">Intro</h1>
+
+<p>For my last job I was responsible for setting up a new virtualization environment. The original virtualization platform was RHEV and I replaced it with OpenNebula. The advantage of OpenNebula is that it is giving us a lot more flexibility and it is easy to provision new Virtual Machines from a template. Also, this is a service we could give to the developers inside the company to set up their own virtual machines.</p>
+
+<p>I built a whole new environment while the old RHEV environment was still running.</p>
+
+<p>On the RHEV we had a couple of Windows machines I couldn’t rebuild so I needed to migrate these to the OpenNebula environment. This was really easy as both systems are using KVM as virtualization layer. The biggest difference was that RHEV was using ISCSI and LVM as storage and our OpenNebula installation is NFS and file based.</p>
+
+<h1 id="howto">Howto</h1>
+
+<h2 id="rhev-manager-shell">RHEV Manager Shell</h2>
+
+<p>On the RHEV machine you need to look-up some details about the virtual hard drives before you can copy them.<br />
+The first step is to make a connection to the RHEV Manager Shell.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@rhevmanager ~]# rhevm-shell
+
+ ++++++++++++++++++++++++++++++++++++++++++
+
+           Welcome to RHEVM shell
+
+ ++++++++++++++++++++++++++++++++++++++++++
+
+<span class="o">[</span>RHEVM shell <span class="o">(</span>disconnected<span class="o">)]</span><span class="c"># connect --url "https://localhost:8443/api" --user "username" --password "password" --insecure</span>
+</code></pre></div></div>
+
+<p>When connected to the RHEV Manager shell, look-up the connected disks to the virtual machine you want to copy.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>RHEVM shell <span class="o">(</span>connected<span class="o">)]</span><span class="c"># list disks --vm-identifier test-migrate</span>
+
+<span class="nb">id</span>         : dff21089-e06f-46db-b5ac-fd0aef7395ba
+name       : CentOS64_Disk1
+</code></pre></div></div>
+
+<p>When you have the ids of the connected disks you can also look-up the details of that disk.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>RHEVM shell <span class="o">(</span>connected<span class="o">)]</span><span class="c">#  show disk --id dff21089-e06f-46db-b5ac-fd0aef7395ba</span>
+
+<span class="nb">id</span>                               : dff21089-e06f-46db-b5ac-fd0aef7395ba
+name                             : CentOS64_Disk1
+actual_size                      : 10737418240
+<span class="nb">alias</span>                            : CentOS64_Disk1
+bootable                         : True
+format                           : raw
+image_id                         : 4a40e716-ea25-46e4-8f98-b7989fadb04f
+interface                        : virtio
+propagate_errors                 : False
+provisioned_size                 : 10737418240
+quota-id                         : 00000000-0000-0000-0000-000000000000
+shareable                        : False
+size                             : 10737418240
+sparse                           : False
+status-state                     : ok
+storage_domains-storage_domain-id: 7f4acfe5-6eb7-402a-8b06-a157f8f50c0a
+wipe_after_delete                : False
+</code></pre></div></div>
+
+<h2 id="find-the-lvs">Find the LVS</h2>
+
+<p>With the information you received from the RHEV Manager Shell you can find the LVS information of that disk by running the following command on the Storage Pool Manager (SPM) node.<br />
+The path exists of /dev/&lt;storage_domains+storage_domain-id&gt;/&lt;image_id&gt;</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>lvdisplay /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
+<span class="nt">---</span> Logical volume <span class="nt">---</span>
+LV Path                /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
+LV Name                4a40e716-ea25-46e4-8f98-b7989fadb04f
+VG Name                7f4acfe5-6eb7-402a-8b06-a157f8f50c0a
+LV UUID                17DXHn-JLxK-hbG2-Cm93-yLGW-Pw33-9Ir95Z
+LV Write Access        <span class="nb">read</span>/write
+LV Creation host, <span class="nb">time </span>node.example.local, 2014-06-10 15:06:25 +0200
+LV Status              available
+<span class="c"># open                 0</span>
+LV Size                10.00 GiB
+Current LE             80
+Segments               2
+Allocation             inherit
+Read ahead sectors     auto
+- currently <span class="nb">set </span>to     256
+Block device           253:26
+</code></pre></div></div>
+
+<h2 id="make-the-lv-available">Make the LV available</h2>
+
+<p>Before you can start copying the LV, you need to make the LV available for use by running lvchange with the parameters -ay (activate + yes).</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>lvchange <span class="nt">-ay</span> /dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f
+</code></pre></div></div>
+
+<h2 id="copy-the-image">Copy the image</h2>
+
+<p>On the receiving server (OpenNebula management node) run the following command. This command will save the data it receives on port 19000 to test1.img.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> nc <span class="nt">-l</span> 19000|bzip2 <span class="nt">-d</span>|dd <span class="nv">bs</span><span class="o">=</span>1M <span class="nv">of</span><span class="o">=</span>/test1.img
+</code></pre></div></div>
+
+<p>On the sending server (SPM server) execute the following command.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> <span class="nb">dd </span><span class="nv">bs</span><span class="o">=</span>1M <span class="k">if</span><span class="o">=</span>/dev/7f4acfe5-6eb7-402a-8b06-a157f8f50c0a/4a40e716-ea25-46e4-8f98-b7989fadb04f|bzip2 <span class="nt">-c</span>|nc &lt;hostname.of.server&gt; 19000
+</code></pre></div></div>
+
+<h2 id="import-into-opennebula">Import into OpenNebula</h2>
+
+<p>Change to user oneadmin on the OpenNebula management node and run the following command.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> oneimage create <span class="nt">--datastore</span> datastore_name <span class="nt">--name</span> test1 <span class="nt">--path</span> /test1.img <span class="nt">--description</span> <span class="s2">"Imported test image"</span>
+</code></pre></div></div>
+
+<p>It is also possible to use the Opennebula GUI and import the copied image that way.</p>
+
+<p><img src="/img/opennebula_import.png" alt="OpenNebula import" title="OpenNebula import" /></p>
+
+
+        <hr>
+
+        <div class="clearfix">
+
+          
+          <a class="btn btn-primary float-left" href="/2014/02/07/ansible-introduction/" data-toggle="tooltip" data-placement="top" title="Introduction to Ansible">&larr; Previous<span class="d-none d-md-inline">
+              Post</span></a>
+          
+          
+          <a class="btn btn-primary float-right" href="/2015/07/29/terraform-remote-state/" data-toggle="tooltip" data-placement="top" title="Terraform remote state">Next<span class="d-none d-md-inline">
+              Post</span> &rarr;</a>
+          
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+
+<hr>
+
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <ul class="list-inline text-center">
+          
+          <li class="list-inline-item">
+            <a href="mailto:mattias.gees@gmail.com">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="far fa-envelope fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          <li class="list-inline-item">
+            <a href="https://twitter.com/MattiasGees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-twitter fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          
+          <li class="list-inline-item">
+            <a href="https://www.linkedin.com/in/mattiasgees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          <li class="list-inline-item">
+            <a href="https://github.com/MattiasGees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+        </ul>
+        <p class="copyright text-muted">Copyright &copy;  2022</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/vendor/startbootstrap-clean-blog/js/scripts.js"></script>
+
+<script src="/assets/scripts.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '');
+</script>
+
+
+
+</body>
+
+</html>

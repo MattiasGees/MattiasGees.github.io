@@ -4,7 +4,7 @@ title:      "Time for a new adventure"
 subtitle:   "Time for a new adventure."
 date:       2018-04-24 16:30:00
 author:     "Mattias Gees"
-header-img: "img/skyscrapers.jpeg"
+background: "/img/skyscrapers.jpeg"
 ---
 
 # Time for a new adventure

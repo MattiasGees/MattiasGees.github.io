@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>
+    High Availability in the cloud - blog.mattiasgees.be
+    
+  </title>
+
+  <meta name="description" content="Last week there was a lot of fuss about the s3 outage on Amazon AWS. Immediately people started tweeting that you could better host your infrastructure in yo...">
+
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+  <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+  <link rel="canonical" href="http://0.0.0.0:4000/2017/03/07/high-availability-in-the-cloud/">
+  <link rel="alternate" type="application/rss+xml" title="blog.mattiasgees.be" href="/feed.xml">
+
+</head>
+
+
+<body>
+
+  <!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="/">blog.mattiasgees.be</a>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      Menu
+      <i class="fa fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/about">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/posts">Posts</a>
+        </li>
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="/contact">Contact</a>
+        </li> -->
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+  <!-- Page Header -->
+
+<header class="masthead" style="background-image: url('/img/standard.jpg ')">
+  
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="post-heading">
+            <h1>High Availability in the cloud</h1>
+            
+            <h2 class="subheading">High Availability in the cloud</h2>
+            
+            <span class="meta">Posted by
+              <a href="#">Mattias Gees</a>
+              on March 07, 2017 &middot; <span class="reading-time" title="Estimated read time">
+  
+   2 mins  read </span>
+
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+
+        <p>Last week there was a lot of fuss about the <a href="https://aws.amazon.com/message/41926/">s3 outage</a> on Amazon AWS. Immediately people started tweeting that you could better host your infrastructure in your own data center where you are in  control.</p>
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Today&#39;s <a href="https://twitter.com/amazon">@Amazon</a> S3 server outage caused many internet sites. Another reason why many customers continue to choose on premise over <a href="https://twitter.com/hashtag/cloud?src=hash">#cloud</a></p>&mdash; Act Today (@acttodayOZ) <a href="https://twitter.com/acttodayOZ/status/836719296231329792">February 28, 2017</a></blockquote>
+<script async="" src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>I don’t want to start a discussion on public vs private cloud but rather about single region vs multi region or single vs multiple data center when you maintain your own infrastructure. When does it make sense for a company to think about multiple regions?</p>
+
+<p>During the outage I tweeted about the downtime and I got some response to go multi-region and multi-cloud for your application.</p>
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Every time a cloud provider fails “You should host it on-premise”. Every time something on-premise fails ”You should host it in the cloud”!</p>&mdash; Mattias Gees (@MattiasGees) <a href="https://twitter.com/MattiasGees/status/836695430733914112">February 28, 2017</a></blockquote>
+<script async="" src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>My reply was that this needs to be a business decision rather than a technical decision. We as technical people like to build infrastructure in the best and most reliable way. This implies investing a lot of time and energy in adapting your application and infrastructure to multi region. Time that is most of the time better invested in improving your application. You better release a new feature from which your customer benefits immediately.</p>
+
+<p>So when does it pay-off to go multi region? It depends on the following factors.
+Will you lose more money when your application is down compared  to set-up / maintain and test your multi region setup?
+You lose credibility with your customers when you go down.
+Do you have a high SLA requirement?
+Some other specific requirements?</p>
+
+<p>To known if you match one of those criterias is really hard. I would recommend to start using multi availability zones in AWS first. If and only if there is a huge motivation, go the multi region way.</p>
+
+
+        <hr>
+
+        <div class="clearfix">
+
+          
+          <a class="btn btn-primary float-left" href="/2015/07/29/terraform-remote-state/" data-toggle="tooltip" data-placement="top" title="Terraform remote state">&larr; Previous<span class="d-none d-md-inline">
+              Post</span></a>
+          
+          
+          <a class="btn btn-primary float-right" href="/2017/09/19/terraform-remote-state-part-2/" data-toggle="tooltip" data-placement="top" title="Terraform remote state part 2">Next<span class="d-none d-md-inline">
+              Post</span> &rarr;</a>
+          
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+
+<hr>
+
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <ul class="list-inline text-center">
+          
+          <li class="list-inline-item">
+            <a href="mailto:mattias.gees@gmail.com">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="far fa-envelope fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          <li class="list-inline-item">
+            <a href="https://twitter.com/MattiasGees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-twitter fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          
+          <li class="list-inline-item">
+            <a href="https://www.linkedin.com/in/mattiasgees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+          <li class="list-inline-item">
+            <a href="https://github.com/MattiasGees">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+          
+        </ul>
+        <p class="copyright text-muted">Copyright &copy;  2022</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/vendor/startbootstrap-clean-blog/js/scripts.js"></script>
+
+<script src="/assets/scripts.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '');
+</script>
+
+
+
+</body>
+
+</html>

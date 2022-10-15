@@ -4,7 +4,7 @@ title:      "Pelican with AsciiDoc"
 subtitle:   "I decided to setup my own blog with Pelican and AsciiDoc."
 date:       2014-01-26 12:00:00
 author:     "Mattias Gees"
-header-img: "img/pelican.jpg"
+background: "/img/pelican.jpg"
 ---
 
 I decided to setup my own blog with Pelican and AsciiDoc. Pelican works with readers to convert your markup language to html. Standard support is provided for reStructuredText, Markdown and AsciiDoc. The problem is that AsciiDoc doesn't generate out of the box. This is because you need a Python library for AsciiDoc called [AsciiDocAPI](http://www.methods.co.nz/asciidoc/asciidocapi.html).
