@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "Software Supply Chain Security"
-subtitle:   "Start of your journey with sigstore, syft and OCI registries"
+subtitle:   "Start your Software Supply Chain Security journey with sigstore, syft and OCI registries"
 date:       2022-10-16 15:00:00
 author:     "Mattias Gees"
 background: "/img/keylock.jpg"
@@ -9,21 +9,26 @@ background: "/img/keylock.jpg"
 
 # Software Supply Chain Security
 
-Besides a few blog posts on my employer's [blog](https://www.jetstack.io/blog/google-threat-horizons-report/), I haven’t blogged in a long time, my last post on here was over 4 years ago.  I plan to start again and lower the bar of entry, I am forcing myself to have less polished posts to be published and be okay with it.
+Besides a few blogposts on my employer's [blog](https://www.jetstack.io/blog/google-threat-horizons-report/), I haven’t blogged in a long time. My last post on here was over 4 years ago. I plan to start again and lower the bar of entry and am forcing myself to have less polished posts to be published and be okay with it.
 
-For some time I have been very interested in the Software Supply Chain Security space. It reminds me a bit of the early days of Kubernetes, where new tooling was popping up almost every week. I have been following closely what is happening with [SLSA](https://slsa.dev) and [Sigstore](https://www.sigstore.dev) especially. Over the weekend I have been toying a bit with GitHub Actions and securing the supply chain.
+For some time I have been very interested in the Software Supply Chain Security space. It reminds me a bit of the early days of Kubernetes, where new tools were popping up almost every week. I have been following closely what is happening with [SLSA](https://slsa.dev) and [Sigstore](https://www.sigstore.dev). Over the weekend I have been toying a bit with GitHub Actions and securing the supply chain with tools out of that space.
 
 ## Github Actions
 
-For a significant part I have been following the Great [blog post](https://marcofranssen.nl/secure-your-software-supply-chain-using-sigstore-and-github-actions) of [Marco Franssen](https://twitter.com/marcofranssen) and doing further discovery on his excellent work.
+For a significant part I have been following the great [blogpost](https://marcofranssen.nl/secure-your-software-supply-chain-using-sigstore-and-github-actions) of [Marco Franssen](https://twitter.com/marcofranssen) and doing some further discovery on his excellent work.
 
-I used a simple ‘Hello World’ nodeJS application that I can build with a Dockerfile and get the application build, generate SBOM and provenance and sign all the generated artefacts with `cosign`. I followed the steps as described in the blog post of Marco Franssen but made some tweaks to fit my workflow and I switched to the container provenance generation of the SLSA framework instead of the one from Philips labs. In a follow-up blog post, I plan to go deeper into provenance generation and learn more about its specifics of it. This was a great introduction to how to every step and integrate it within the CI pipeline.
+I used a simple ‘Hello World’ nodeJS application that I can build with a Dockerfile and get the container image build. I also generate the SBOM and provenance and sign all the artefacts with `cosign`. I followed the steps as described in the blogpost of Marco Franssen but made some tweaks to fit my workflow. The changes I made are:
 
-The full pipeline I created can be found on my [GitHub](https://github.com/MattiasGees/S3C-demo).
+* Using the Docker build action instead of a GitHub Action command
+* Used Dockerhub instead of GCR
+* Used the Syft action instead of a GitHub Action command
+* Switched to the container provenance generation of the SLSA framework instead of the one from Philips labs. In a follow-up blogpost, I plan to go deeper into provenance generation and get more into the specifics of it.
+
+This was a great introduction to how all the tools fit together and can be used in your CI pipeline. The full pipeline I created can be found on my [GitHub](https://github.com/MattiasGees/S3C-demo). Creation of all of the attestations in the CI pipeline is not enough, unless you actually use them, this is where the next step of my investigation took me.
 
 ## Verify container image
 
-As the image has been signed through the GitHub Actions workload identity and uses [keyless signatures](https://github.com/sigstore/cosign/blob/main/KEYLESS.md). The image signature can be verified in the following way:
+As the image has been signed through the GitHub Actions workload identity and uses [keyless signatures](https://github.com/sigstore/cosign/blob/main/KEYLESS.md), the image signature can be verified in the following way:
 
 ```bash
 COSIGN_EXPERIMENTAL=1 cosign verify mattiasgees/s3c-demo:main | jq
@@ -73,29 +78,29 @@ The following checks were performed on each of these signatures:
 ]
 ```
 
-This tells us that a GitHub action has signed the image and also contains some information on the environment it has run in.
+This tells us that my GitHub action has signed the image and also contains information/metadata on the environment it has run in.
 
 ## Attest vs attach & sign
 
 One of the things I investigated during the whole exercise was how to upload the SBOM and provenance data to my OCI registry. `cosign` has an `attest` and `attach` command.
 
-The `attest` command generates a tag in the OCI registry formatted as `<image name>:<sha256-string>.att` and can have multiple layers to store all your attestations. In the example pipeline, it stores the SBOM and provenance in the `*.att` tag.
+The `attest` command generates a tag in the OCI registry formatted as `<image name>:<sha256-string>.att` and can have multiple layers to store all your attestations. In the example pipeline I created, it stores the SBOM and provenance in the `*.att` tag.
 
-The advantage of the attest command over attach & sign is that you end up with less tags and the uploading & signing happens in one step. When you do attach & sign, you would create 2 tags (1 for the material and 1 for the signing information). The disadvantage of the attest command is that it is a bit harder to get the necessary information out. Let's say I want to extra my SBOM from the OCI registry I will need to run the following command
+The advantage of the `attest` command over `attach` & `sign` is that you end up with fewer tags and the uploading & signing happens in one step. When you do `attach` & `sign`, you would create 2 tags, 1 for the material (e.g. SBOM file) and 1 for the signing information. The disadvantage of the `attest` command is that it is a bit harder to get the necessary information out. If you want to extract the SBOM file from my attestation, you need to run the following command:
 
 ```bash
 COSIGN_EXPERIMENTAL=1 cosign verify-attestation mattiasgees/s3c-demo:main --type spdxjson | jq '.payload |= @base64d | .payload | fromjson | select(.predicateType == "https://spdx.dev/Document") | .predicate.Data' > sbom-spdx.json
 ```
 
-When you use `cosign attach`, you can use `cosign download` to get the SBOM in an easy way.
+When you use `cosign attach`, you can use `cosign download` to get the SBOM, which is easier. Based on talking to a few people, it seems the community is mostly standardising on `cosign attest`
 
 ## Copying of images
 
-Both `crane copy` and `cosign copy` will not only copy your container images from one OCI registry to another but also all of its associated [tags](https://twitter.com/mattomata/status/1580369338879836160?s=20&t=5VeEFzvgP2QauO6Rf0g-mA) (signatures, attestations).
+Both `crane copy` and `cosign copy` will not only copy your container images from one OCI registry to another but also all of its associated [tags](https://twitter.com/mattomata/status/1580369338879836160?s=20&t=5VeEFzvgP2QauO6Rf0g-mA) (signatures, attestations). No more retagging of container images needed.
 
 ## Enforcement
 
-The last thing I did as part of my enforcement is deploy the Sigstore Policy Controller into my Kubernetes and enforce a simple policy where it checks if the container image comes from the GitHub action. 
+The last thing I did as part of my experiment is to enforce signatures on my Kubernetes Cluster. I deployed the [Sigstore Policy Controller](https://github.com/sigstore/policy-controller) into my Kubernetes and enforced a simple policy where it checks if the container image comes from the GitHub action.
 
 ```yaml
 apiVersion: policy.sigstore.dev/v1beta1
@@ -117,8 +122,8 @@ spec:
         subject: "https://github.com/MattiasGees/S3C-demo/.github/workflows/build.yml@refs/heads/main"
 ```
 
-Sigstore Policy controller can do a lot more complex scenarios as well where it can match if specific [data](https://github.com/sigstore/policy-controller/blob/main/examples/policies/custom-key-attestation-sbom-spdxjson.yaml) is available in your SBOM, Provenance or any other type. This will be for a subsequent blogpost
+Sigstore Policy controller can do a lot more complex scenarios as well where it can match if specific [data](https://github.com/sigstore/policy-controller/blob/main/examples/policies/custom-key-attestation-sbom-spdxjson.yaml) is available in your SBOM, Provenance or any other attestation type. I plan to do further experimenting and blog on this in a subsequent blogpost
 
 ## To end
 
-This blog post only started to scratch the surface of the possibilities that can be done when you combine a whole lot of tools like cosign, syft, policy controllers, and OCI registries. I am continuing my research in this space and plan to publish more of my thoughts and experiments in the near future.
+This blogpost only scratched the surface of the possibilities that can be done when you combine a lot of powerful tools like cosign, syft, policy controllers, and OCI registries. I am continuing my research in this space and plan to publish more of my thoughts and experiments in the near future.
