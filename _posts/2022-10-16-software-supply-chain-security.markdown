@@ -86,6 +86,8 @@ One of the things I investigated during the whole exercise was how to upload the
 
 The `attest` command generates a tag in the OCI registry formatted as `<image name>:<sha256-string>.att` and can have multiple layers to store all your attestations. In the example pipeline I created, it stores the SBOM and provenance in the `*.att` tag.
 
+![Container layers](/img/layers.png "Container layers")
+
 The advantage of the `attest` command over `attach` & `sign` is that you end up with fewer tags and the uploading & signing happens in one step. When you do `attach` & `sign`, you would create 2 tags, 1 for the material (e.g. SBOM file) and 1 for the signing information. The disadvantage of the `attest` command is that it is a bit harder to get the necessary information out. If you want to extract the SBOM file from my attestation, you need to run the following command:
 
 ```bash
