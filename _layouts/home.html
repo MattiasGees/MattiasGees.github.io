@@ -33,7 +33,11 @@ layout: default
         {% for post in site.posts limit : 5 %}
 
         <article class="post-preview">
+          {% if post.external_url %}
+          <a href="{{ post.external_url }}">
+          {% else %}
           <a href="{{ post.url | prepend: site.baseurl | replace: '//', '/' }}">
+          {% endif %}
             <h2 class="post-title">{{ post.title }}</h2>
             {% if post.subtitle %}
             <h3 class="post-subtitle">{{ post.subtitle }}</h3>
@@ -48,7 +52,7 @@ layout: default
             {{ site.author }}
             {% endif %}
             on
-            {{ post.date | date: '%B %d, %Y' }} &middot; {% include read_time.html content=post.content %}            
+            {{ post.date | date: '%B %d, %Y' }} &middot; {% if post.external_url %}External Blogpost{% else %}{% include read_time.html content=post.content %}{% endif %}            
           </p>
         </article>
 
